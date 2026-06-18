@@ -17,7 +17,7 @@ class PromoBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.amarillo.withOpacity(0.15),
+        color: AppColors.amarillo.withValues(alpha: 0.15),
         border: Border.all(color: AppColors.amarillo),
         borderRadius: BorderRadius.circular(10),
       ),

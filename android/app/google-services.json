@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "886475451398",
+    "project_id": "gestioninvlrpd01",
+    "storage_bucket": "gestioninvlrpd01.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886475451398:android:086f76346f6edc913b2787",
+        "android_client_info": {
+          "package_name": "com.example.sistema_inventarios_lrpd"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4BoWmTFRdbGq0RVxmqwVlg6ygrQTT8Wc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

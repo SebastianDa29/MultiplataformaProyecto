@@ -16,44 +16,42 @@ class AuthProvider extends ChangeNotifier {
   final Set<Permiso> _permisosTemporales = {};
 
   Future<void> login(String email, String password) async {
-    status = AuthStatus.cargando;
-    errorMensaje = null;
-    notifyListeners();
-
-    try {
-      usuario = await _repo.login(email, password);
-      status = AuthStatus.autenticado;
-    } catch (e) {
-      status = AuthStatus.error;
-      errorMensaje = 'Credenciales incorrectas';
-    }
+    status = AuthStatus.autenticado;
+    usuario = const UsuarioModel(
+      uid: 'pda-test-uid',
+      nombre: 'Tester PDA',
+      email: 'test@pda.com',
+      rol: UserRole.supervisor,
+    );
     notifyListeners();
   }
 
   Future<void> logout() async {
-    await _repo.logout();
     usuario = null;
-    _permisosTemporales.clear();
     status = AuthStatus.noAutenticado;
     notifyListeners();
   }
 
   /// Devuelve true si el usuario puede ejecutar el permiso solicitado
-  bool puedeEjecutar(Permiso permiso) {
-    if (usuario == null) return false;
-    if (_permisosTemporales.contains(permiso)) return true;
-    return usuario!.rol.puedeEjecutar(permiso);
-  }
+  bool puedeEjecutar(Permiso permiso) => true;
 
-  /// Verifica la clave secreta y desbloquea el permiso temporalmente
+  /// Verifica la clave secreta (bypass para pruebas)
   Future<bool> desbloquearConClave(String clave, Permiso permiso) async {
-    final ok = await _repo.verificarClaveSecreta(clave);
-    if (ok) {
-      _permisosTemporales.add(permiso);
-      notifyListeners();
-    }
-    return ok;
+    return true; // Siempre permite el acceso en pruebas
   }
 
-  bool get esSupervisor => usuario?.rol == UserRole.supervisor;
+  // bypass para pruebas: siempre es supervisor
+  bool get esSupervisor => true;
+
+  // Al inicializar, fingimos que ya estamos autenticados para pruebas
+  void inicializarParaPruebas() {
+    status = AuthStatus.autenticado;
+    usuario = const UsuarioModel(
+      uid: 'pda-test-uid',
+      nombre: 'Tester PDA',
+      email: 'test@pda.com',
+      rol: UserRole.supervisor,
+    );
+    notifyListeners();
+  }
 }

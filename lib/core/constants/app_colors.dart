@@ -13,6 +13,15 @@ class AppColors {
   static const Color rojoStock = Color(0xFFC62828);
   static const Color amarilloAlerta = Color(0xFFF9A825);
 
+  // ── Colores Interfaz Merma PDA ──────────────────────────
+  static const Color pdaHeaderGreen = Color(0xFF1FAF38);
+  static const Color pdaSearchBlue = Color(0xFF1E88E5);
+  static const Color pdaReadOnlyBg = Color(0xFFE8F5E9);
+  static const Color pdaTableBg = Color(0xFFF5F5F5);
+  static const Color pdaBtnAdd = Color(0xFF1FAF38);
+  static const Color pdaBtnDelete = Color(0xFF1B5E20);
+  static const Color pdaBtnConfirm = Color(0xFF2E7D32);
+
   // ── Compatibilidad con tu LoginScreen actual ────────────
   static const Color red = rojo;
   static const Color yellow = amarillo;

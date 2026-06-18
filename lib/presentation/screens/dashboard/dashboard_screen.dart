@@ -4,9 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/pda_styles.dart';
 import '../../../core/enums/user_role.dart';
+import '../../../core/enums/merma_tipo.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/inventario_provider.dart';
 import '../../../router/app_router.dart';
+import '../../../data/models/merma_model.dart';
+import '../../../data/models/producto_model.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -37,6 +42,8 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animController.forward();
+      context.read<InventarioProvider>().escucharProductos();
+      context.read<InventarioProvider>().escucharMermas();
     });
   }
 
@@ -47,11 +54,12 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   void _navegar(BuildContext context, String ruta, Permiso permiso) {
-
-    debugPrint('NAVEGANDO A: $ruta');
-
-    if (context.mounted) {
+    if (context.read<AuthProvider>().puedeEjecutar(permiso)) {
       context.push(ruta);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Acceso denegado: No tiene permisos')),
+      );
     }
   }
 
@@ -94,49 +102,20 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final inv = context.watch<InventarioProvider>();
     final usuario = auth.usuario;
 
-    final demoProductos = <_DemoProducto>[
-      const _DemoProducto(nombre: 'Arroz Superior', stockReal: 4, stock: 20),
-      const _DemoProducto(nombre: 'Aceite Vegetal', stockReal: 2, stock: 15),
-      const _DemoProducto(nombre: 'Azúcar Blanca', stockReal: 1, stock: 12),
-      const _DemoProducto(nombre: 'Fideos Spaghetti', stockReal: 8, stock: 18),
-      const _DemoProducto(nombre: 'Leche Evaporada', stockReal: 6, stock: 10),
-    ];
-
-    final demoMermas = <_DemoMerma>[
-      _DemoMerma(
-        nombreProducto: 'Leche Evaporada',
-        tipo: const _DemoTipoMerma('Vencimiento'),
-        registradoPor: 'Sistema',
-        cantidad: 2,
-        fecha: DateTime.now(),
-      ),
-      _DemoMerma(
-        nombreProducto: 'Azúcar Blanca',
-        tipo: const _DemoTipoMerma('Daño'),
-        registradoPor: 'Sistema',
-        cantidad: 1,
-        fecha: DateTime.now(),
-      ),
-      _DemoMerma(
-        nombreProducto: 'Aceite Vegetal',
-        tipo: const _DemoTipoMerma('Merma parcial'),
-        registradoPor: 'Sistema',
-        cantidad: 3,
-        fecha: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-    ];
-
-    final totalProductos = demoProductos.length;
-    final stockBajo = demoProductos.where((p) => p.stockReal <= 5).length;
-    final conPromocion = 2;
-    final totalMermasHoy = demoMermas
+    final productos = inv.productos;
+    final productosStockBajo = inv.productosStockBajo;
+    final mermas = inv.mermas;
+    
+    final totalProductos = productos.length;
+    final stockBajo = productosStockBajo.length;
+    final conPromocion = inv.productosConPromocion.length;
+    
+    final totalMermasHoy = mermas
         .where((m) => _esHoy(m.fecha))
         .fold<int>(0, (sum, m) => sum + m.cantidad);
-
-    final productosStockBajo =
-    demoProductos.where((p) => p.stockReal <= 5).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F3F7),
@@ -164,7 +143,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   AppStrings.appNombre,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: PDAStyles.fontLarge,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -184,14 +163,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                     children: [
                       if (stockBajo > 0) ...[
                         _AlertaStrip(
-                          mensaje: '⚠  $stockBajo producto(s) con stock bajo',
+                          mensaje: '⚠  $stockBajo producto(s) con stock crítico',
                           color: const Color(0xFFFFF3CD),
                           borderColor: const Color(0xFFFFCC02),
                           textColor: const Color(0xFF7A5900),
                         ),
                         const SizedBox(height: 16),
                       ],
-                      _LabelSeccion(texto: 'Resumen'),
+                      _LabelSeccion(texto: 'Estadísticas en Tiempo Real'),
                       const SizedBox(height: 10),
                       _MetricasGrid(
                         totalProductos: totalProductos,
@@ -200,23 +179,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                         totalMermasHoy: totalMermasHoy,
                       ),
                       const SizedBox(height: 28),
-                      _LabelSeccion(texto: 'Módulos'),
+                      _LabelSeccion(texto: 'Módulos Operativos'),
                       const SizedBox(height: 10),
                       _ModulosGrid(
                         onNavegar: (ruta, permiso) =>
                             _navegar(context, ruta, permiso),
                       ),
                       const SizedBox(height: 28),
-                      if (demoMermas.isNotEmpty) ...[
-                        _LabelSeccion(texto: 'Últimas Mermas'),
+                      if (mermas.isNotEmpty) ...[
+                        _LabelSeccion(texto: 'Reciente: Mermas y Pérdidas'),
                         const SizedBox(height: 10),
-                        _UltimasMermas(mermas: demoMermas.take(4).toList()),
+                        _UltimasMermasReal(mermas: mermas.take(4).toList()),
                       ],
                       const SizedBox(height: 28),
                       if (productosStockBajo.isNotEmpty) ...[
-                        _LabelSeccion(texto: 'Stock Crítico'),
+                        _LabelSeccion(texto: 'Reposición Urgente'),
                         const SizedBox(height: 10),
-                        _StockCriticoList(
+                        _StockCriticoListReal(
                           productos: productosStockBajo.take(3).toList(),
                         ),
                       ],
@@ -242,23 +221,41 @@ class _DashboardScreenState extends State<DashboardScreen>
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Deseas salir del sistema?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PDAStyles.borderRadius)),
+        title: Text('Cerrar sesión', 
+          style: PDAStyles.headerStyle.copyWith(color: Colors.black)),
+        content: const Text(
+          '¿Deseas salir del sistema?',
+          style: TextStyle(fontSize: PDAStyles.fontMedium),
+        ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await auth.logout();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.rojo),
-            child: const Text(
-              'Salir',
-              style: TextStyle(color: Colors.white),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0, right: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(100, PDAStyles.minTouchTarget),
+                  ),
+                  child: const Text('Cancelar', style: TextStyle(fontSize: PDAStyles.fontMedium)),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await auth.logout();
+                  },
+                  style: PDAStyles.primaryButtonStyle.copyWith(
+                    minimumSize: WidgetStateProperty.all(const Size(120, PDAStyles.minTouchTarget)),
+                  ),
+                  child: const Text(
+                    'Salir',
+                    style: PDAStyles.buttonTextStyle,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -318,7 +315,7 @@ class _HeroHeader extends StatelessWidget {
                     saludo,
                     style: const TextStyle(
                       color: Colors.white70,
-                      fontSize: 14,
+                      fontSize: PDAStyles.fontSmall,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
@@ -327,7 +324,7 @@ class _HeroHeader extends StatelessWidget {
                     nombre,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: PDAStyles.fontHuge,
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
                     ),
@@ -339,7 +336,7 @@ class _HeroHeader extends StatelessWidget {
                       const SizedBox(width: 8),
                       _PillBadge(
                         texto: fecha,
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         textColor: Colors.white,
                       ),
                     ],
@@ -366,7 +363,7 @@ class _CirculoDecorativo extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(opacity),
+        color: Colors.white.withValues(alpha: opacity),
       ),
     );
   }
@@ -394,7 +391,7 @@ class _PillBadge extends StatelessWidget {
       child: Text(
         texto,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: PDAStyles.fontExtraSmall,
           fontWeight: FontWeight.w600,
           color: textColor,
         ),
@@ -412,8 +409,8 @@ class _LabelSeccion extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 4,
-          height: 18,
+          width: 6,
+          height: 22,
           decoration: BoxDecoration(
             color: AppColors.rojo,
             borderRadius: BorderRadius.circular(2),
@@ -423,7 +420,7 @@ class _LabelSeccion extends StatelessWidget {
         Text(
           texto,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: PDAStyles.fontLarge,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1A1A2E),
             letterSpacing: -0.3,
@@ -462,7 +459,7 @@ class _AlertaStrip extends StatelessWidget {
         style: TextStyle(
           color: textColor,
           fontWeight: FontWeight.w600,
-          fontSize: 13,
+          fontSize: PDAStyles.fontMedium,
         ),
       ),
     );
@@ -563,7 +560,7 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textColor = textoDark ? Colors.black87 : Colors.white;
-    final subColor = textoDark ? Colors.black54 : Colors.white.withOpacity(0.8);
+    final subColor = textoDark ? Colors.black54 : Colors.white.withValues(alpha: 0.8);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -576,7 +573,7 @@ class _MetricCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: gradientColors.first.withOpacity(0.35),
+            color: gradientColors.first.withValues(alpha: 0.35),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -592,11 +589,11 @@ class _MetricCard extends StatelessWidget {
                 titulo,
                 style: TextStyle(
                   color: subColor,
-                  fontSize: 12,
+                  fontSize: PDAStyles.fontExtraSmall,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              Icon(icono, color: textColor.withOpacity(0.9), size: 20),
+              Icon(icono, color: textColor.withValues(alpha: 0.9), size: 24),
             ],
           ),
           const SizedBox(height: 10),
@@ -604,7 +601,7 @@ class _MetricCard extends StatelessWidget {
             valor,
             style: TextStyle(
               color: textColor,
-              fontSize: 32,
+              fontSize: PDAStyles.fontHuge,
               fontWeight: FontWeight.bold,
               height: 1,
               letterSpacing: -1,
@@ -615,7 +612,7 @@ class _MetricCard extends StatelessWidget {
             subtitulo,
             style: TextStyle(
               color: subColor,
-              fontSize: 11,
+              fontSize: PDAStyles.fontExtraSmall,
             ),
           ),
         ],
@@ -631,6 +628,7 @@ class _ModulosGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final modulos = [
       _ModuloData(
         titulo: 'Inventario',
@@ -641,14 +639,6 @@ class _ModulosGrid extends StatelessWidget {
         permiso: Permiso.verProductos,
       ),
       _ModuloData(
-        titulo: 'Agregar',
-        subtitulo: 'Nuevo producto',
-        icono: Icons.add_circle_outline_rounded,
-        color: const Color(0xFF1565C0),
-        ruta: AppRouter.agregar,
-        permiso: Permiso.agregarProducto,
-      ),
-      _ModuloData(
         titulo: 'Mermas',
         subtitulo: 'Registrar pérdida',
         icono: Icons.delete_sweep_outlined,
@@ -657,8 +647,24 @@ class _ModulosGrid extends StatelessWidget {
         permiso: Permiso.registrarMerma,
       ),
       _ModuloData(
+        titulo: 'Conteo PDA',
+        subtitulo: 'Batch scanning',
+        icono: Icons.qr_code_scanner_rounded,
+        color: const Color(0xFFE65100),
+        ruta: AppRouter.inventarioConteo,
+        permiso: Permiso.modificarStock,
+      ),
+      _ModuloData(
+        titulo: 'Kardex',
+        subtitulo: 'Movimientos stock',
+        icono: Icons.history_rounded,
+        color: const Color(0xFF1565C0),
+        ruta: AppRouter.kardex,
+        permiso: Permiso.verReportes,
+      ),
+      _ModuloData(
         titulo: 'Reportes',
-        subtitulo: 'Solo supervisor',
+        subtitulo: 'Estadísticas',
         icono: Icons.bar_chart_rounded,
         color: const Color(0xFF00695C),
         ruta: AppRouter.reportes,
@@ -673,14 +679,14 @@ class _ModulosGrid extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.55,
+        childAspectRatio: 1.3,
       ),
       itemCount: modulos.length,
       itemBuilder: (context, i) {
         final m = modulos[i];
         return _ModuloCard(
           data: m,
-          tieneAcceso: true,
+          tieneAcceso: auth.puedeEjecutar(m.permiso),
           onTap: () => onNavegar(m.ruta, m.permiso),
         );
       },
@@ -745,7 +751,7 @@ class _ModuloCardState extends State<_ModuloCard> {
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.07),
+                color: Colors.black.withValues(alpha: 0.07),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -759,18 +765,18 @@ class _ModuloCardState extends State<_ModuloCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(widget.data.icono, color: color, size: 20),
+                    child: Icon(widget.data.icono, color: color, size: 24),
                   ),
                   if (!widget.tieneAcceso)
                     Icon(
                       Icons.lock_outline_rounded,
                       color: Colors.grey.shade400,
-                      size: 16,
+                      size: 20,
                     ),
                 ],
               ),
@@ -781,7 +787,7 @@ class _ModuloCardState extends State<_ModuloCard> {
                     widget.data.titulo,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: PDAStyles.fontMedium,
                       color: Color(0xFF1A1A2E),
                     ),
                   ),
@@ -789,7 +795,7 @@ class _ModuloCardState extends State<_ModuloCard> {
                   Text(
                     widget.data.subtitulo,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: PDAStyles.fontExtraSmall,
                       color: Colors.grey.shade500,
                     ),
                   ),
@@ -803,9 +809,9 @@ class _ModuloCardState extends State<_ModuloCard> {
   }
 }
 
-class _UltimasMermas extends StatelessWidget {
-  final List<_DemoMerma> mermas;
-  const _UltimasMermas({required this.mermas});
+class _UltimasMermasReal extends StatelessWidget {
+  final List<MermaModel> mermas;
+  const _UltimasMermasReal({required this.mermas});
 
   @override
   Widget build(BuildContext context) {
@@ -815,7 +821,7 @@ class _UltimasMermas extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -844,7 +850,7 @@ class _UltimasMermas extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.rojoStock.withOpacity(0.1),
+                    color: AppColors.rojoStock.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -882,7 +888,7 @@ class _UltimasMermas extends StatelessWidget {
                   padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.rojoStock.withOpacity(0.08),
+                    color: AppColors.rojoStock.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -903,9 +909,9 @@ class _UltimasMermas extends StatelessWidget {
   }
 }
 
-class _StockCriticoList extends StatelessWidget {
-  final List<_DemoProducto> productos;
-  const _StockCriticoList({required this.productos});
+class _StockCriticoListReal extends StatelessWidget {
+  final List<ProductoModel> productos;
+  const _StockCriticoListReal({required this.productos});
 
   @override
   Widget build(BuildContext context) {
@@ -915,7 +921,7 @@ class _StockCriticoList extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -926,9 +932,8 @@ class _StockCriticoList extends StatelessWidget {
           final i = entry.key;
           final p = entry.value;
           final esUltimo = i == productos.length - 1;
-          final porcentaje = p.stock > 0
-              ? (p.stockReal / p.stock).clamp(0.0, 1.0)
-              : 0.0;
+          
+          final porcentaje = (p.stockReal / (p.stockMinimo > 0 ? p.stockMinimo * 2 : 10)).clamp(0.0, 1.0);
 
           return Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -960,7 +965,7 @@ class _StockCriticoList extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${p.stockReal} / ${p.stock}',
+                      '${p.stockReal} unid.',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -990,37 +995,4 @@ class _StockCriticoList extends StatelessWidget {
       ),
     );
   }
-}
-
-class _DemoTipoMerma {
-  final String etiqueta;
-  const _DemoTipoMerma(this.etiqueta);
-}
-
-class _DemoMerma {
-  final String nombreProducto;
-  final _DemoTipoMerma tipo;
-  final String registradoPor;
-  final int cantidad;
-  final DateTime fecha;
-
-  _DemoMerma({
-    required this.nombreProducto,
-    required this.tipo,
-    required this.registradoPor,
-    required this.cantidad,
-    required this.fecha,
-  });
-}
-
-class _DemoProducto {
-  final String nombre;
-  final int stockReal;
-  final int stock;
-
-  const _DemoProducto({
-    required this.nombre,
-    required this.stockReal,
-    required this.stock,
-  });
 }

@@ -27,15 +27,22 @@ class ProductoRepository {
     return ProductoModel.fromFirestore(snap.docs.first);
   }
 
-  /// Agrega un nuevo producto
-  Future<void> agregar(ProductoModel producto, String usuarioNombre) async {
-    await _fb.productos.add(producto.toMap());
+  /// Agrega un nuevo producto y retorna su ID
+  Future<String> agregar(ProductoModel producto, String usuarioNombre) async {
+    final docRef = await _fb.productos.add(producto.toMap()).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => throw Exception('Tiempo de espera agotado al conectar con Firestore. Revisa tu conexión o las reglas de seguridad.'),
+    );
     await _registrarHistorial('agregar', producto.codigo, producto.nombre, usuarioNombre);
+    return docRef.id;
   }
 
   /// Actualiza un producto existente
   Future<void> actualizar(ProductoModel producto, String usuarioNombre) async {
-    await _fb.productos.doc(producto.id).update(producto.toMap());
+    await _fb.productos.doc(producto.id).update(producto.toMap()).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => throw Exception('No se pudo actualizar el producto (Timeout)'),
+    );
     await _registrarHistorial('editar', producto.codigo, producto.nombre, usuarioNombre);
   }
 

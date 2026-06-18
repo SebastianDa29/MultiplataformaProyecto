@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../router/app_router.dart';
 import '../dashboard/dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -63,11 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const DashboardScreen(),
-        ),
-      );
+      context.go(AppRouter.dashboard);
     } catch (e) {
       if (!mounted) return;
       setState(() => _errorMsg = 'Error de conexión. Intenta de nuevo.');
@@ -179,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 150,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.06),
+                    color: Colors.white.withValues(alpha: 0.06),
                   ),
                 ),
               ),
@@ -206,9 +204,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 children: [
                                   _dot(AppColors.yellow),
                                   const SizedBox(width: 6),
-                                  _dot(Colors.white.withOpacity(0.35)),
+                                  _dot(Colors.white.withValues(alpha: 0.35)),
                                   const SizedBox(width: 6),
-                                  _dot(Colors.white.withOpacity(0.35)),
+                                  _dot(Colors.white.withValues(alpha: 0.35)),
                                 ],
                               ),
                               const SizedBox(height: 32),
@@ -240,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 'Sistema de Gestión\nde Inventario · Chincha Alta',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.65),
+                                  color: Colors.white.withValues(alpha: 0.65),
                                   fontSize: subtitleSize,
                                   height: 1.45,
                                 ),
@@ -298,7 +296,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: Text(
                                       'Acceso controlado por roles\nSupervisor · Inventarista',
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.5),
+                                        color: Colors.white.withValues(alpha: 0.5),
                                         fontSize: 10,
                                         height: 1.4,
                                       ),
@@ -627,7 +625,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Sistema de Inventario',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 12,
                   ),
                 ),
@@ -663,7 +661,7 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
+              color: Colors.white.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: AppColors.yellow, size: 15),
@@ -684,7 +682,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextSpan(
                     text: normal,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.75),
+                      color: Colors.white.withValues(alpha: 0.75),
                       fontSize: fontSize,
                     ),
                   ),

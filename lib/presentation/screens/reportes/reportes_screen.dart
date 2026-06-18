@@ -128,7 +128,7 @@ class ReportesScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -175,7 +175,7 @@ class ReportesScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -188,7 +188,7 @@ class ReportesScreen extends StatelessWidget {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.rojoStock.withOpacity(0.1),
+                          color: AppColors.rojoStock.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(Icons.warning_amber_rounded,
@@ -240,7 +240,7 @@ class ReportesScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -253,7 +253,7 @@ class ReportesScreen extends StatelessWidget {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.amarillo.withOpacity(0.15),
+                          color: AppColors.amarillo.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(Icons.local_offer_outlined,
@@ -354,7 +354,7 @@ class _MetricaCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -394,7 +394,7 @@ class _FilaMerma extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.grisMedio.withOpacity(0.15)),
+          bottom: BorderSide(color: AppColors.grisMedio.withValues(alpha: 0.15)),
         ),
       ),
       child: Row(
@@ -407,7 +407,7 @@ class _FilaMerma extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               color: cantidad > 0
-                  ? AppColors.rojoStock.withOpacity(0.1)
+                  ? AppColors.rojoStock.withValues(alpha: 0.1)
                   : AppColors.grisClaro,
               borderRadius: BorderRadius.circular(20),
             ),

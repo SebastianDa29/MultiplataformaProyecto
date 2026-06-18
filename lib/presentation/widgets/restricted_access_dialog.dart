@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/pda_styles.dart';
 import '../../core/enums/user_role.dart';
 import '../providers/auth_provider.dart';
 
@@ -66,25 +67,28 @@ class _RestrictedAccessDialogState extends State<RestrictedAccessDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(PDAStyles.borderRadius)),
       title: Row(children: [
-        const Icon(Icons.lock_outline, color: AppColors.rojo),
-        const SizedBox(width: 8),
-        const Text(AppStrings.accesoRestringido),
+        const Icon(Icons.lock_outline, color: AppColors.rojo, size: 28),
+        const SizedBox(width: PDAStyles.targetPadding / 2),
+        Text(AppStrings.accesoRestringido, 
+          style: PDAStyles.headerStyle.copyWith(color: Colors.black)),
       ]),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         const Text(
           'Esta acción requiere autorización del supervisor.\nIngresa la clave secreta:',
-          style: TextStyle(fontSize: 14),
+          style: TextStyle(fontSize: PDAStyles.fontMedium),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: PDAStyles.targetPadding),
         TextField(
           controller: _controller,
           obscureText: !_verClave,
           autofocus: true,
-          decoration: InputDecoration(
-            labelText: AppStrings.claveSecreta,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          style: PDAStyles.valueStyle,
+          decoration: PDAStyles.inputDecoration(
+            AppStrings.claveSecreta,
+            icon: Icons.vpn_key,
+          ).copyWith(
             errorText: _error,
             suffixIcon: IconButton(
               icon: Icon(_verClave ? Icons.visibility_off : Icons.visibility),
@@ -95,19 +99,33 @@ class _RestrictedAccessDialogState extends State<RestrictedAccessDialog> {
         ),
       ]),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text(AppStrings.cancelar),
-        ),
-        ElevatedButton(
-          onPressed: _cargando ? null : _verificar,
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.rojo),
-          child: _cargando
-              ? const SizedBox(
-              width: 18, height: 18,
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : const Text(AppStrings.ingresar,
-              style: TextStyle(color: Colors.white)),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0, right: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(100, PDAStyles.minTouchTarget),
+                ),
+                child: const Text(AppStrings.cancelar, style: TextStyle(fontSize: PDAStyles.fontMedium)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _cargando ? null : _verificar,
+                style: PDAStyles.primaryButtonStyle.copyWith(
+                  minimumSize: WidgetStateProperty.all(const Size(120, PDAStyles.minTouchTarget)),
+                ),
+                child: _cargando
+                    ? const SizedBox(
+                    width: 24, height: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                    : const Text(AppStrings.ingresar,
+                    style: PDAStyles.buttonTextStyle),
+              ),
+            ],
+          ),
         ),
       ],
     );
